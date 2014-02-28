@@ -15,10 +15,10 @@ type TestOptions struct {
 }
 
 type RequestURLTest struct {
-	api Api
-	opts TestOptions
+	api      Api
+	opts     TestOptions
 	function string
-	result string
+	result   string
 }
 
 func (o TestOptions) OptionString() string {
