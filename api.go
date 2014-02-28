@@ -5,7 +5,16 @@
 
 package zoopla
 
-const baseURL = "http://api.zoopla.co.uk/api/v1/"
+import (
+	"io/ioutil"
+	"net/http"
+)
+
+const BaseURL = "http://api.zoopla.co.uk/api/v1/"
+
+type OptionStringer interface {
+	OptionString() string
+}
 
 type Api struct {
 	key string
@@ -14,4 +23,8 @@ type Api struct {
 func NewApi(key string) *Api {
 	f := Api{key}
 	return &f
+}
+
+func (a *Api) RequestURL(function string, opt OptionStringer) string {
+	return BaseURL + function + ".js?api_key=" + a.key + "&" + opt.OptionString()
 }
