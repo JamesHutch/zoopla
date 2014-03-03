@@ -10,32 +10,31 @@ import (
 )
 
 type TestOptions struct {
-	parameter1 string
-	parameter2 string
+	Parameter1 string `url:"param1,omitempty"`
+	Parameter2 string `url:"param2,omitempty"`
 }
 
-type RequestURLTest struct {
-	api      Api
+type NewRequestTest struct {
+	api      *Api
 	opts     TestOptions
 	function string
 	result   string
 }
 
-func (o TestOptions) OptionString() string {
-	return "parameter1=" + o.parameter1 + "&parameter2=" + o.parameter2
+var nrTests = []NewRequestTest{
+	{NewApi("key1"), TestOptions{Parameter1: "option1", Parameter2: "option2"}, "function1", "http://api.zoopla.co.uk/api/v1/function1?api_key=key1&param1=option1&param2=option2"},
+	{NewApi("key2"), TestOptions{Parameter2: "option2"}, "function2", "http://api.zoopla.co.uk/api/v1/function2?api_key=key2&param2=option2"},
+	{NewApi("key3"), TestOptions{Parameter1: "option1"}, "function3", "http://api.zoopla.co.uk/api/v1/function3?api_key=key3&param1=option1"},
 }
 
-var urlTests = []RequestURLTest{
-	{Api{"key1"}, TestOptions{"option1", "option2"}, "function1", "http://api.zoopla.co.uk/api/v1/function1.js?api_key=key1&parameter1=option1&parameter2=option2"},
-	{Api{"世界"}, TestOptions{"option1", "option2"}, "function2", "http://api.zoopla.co.uk/api/v1/function2.js?api_key=世界&parameter1=option1&parameter2=option2"},
-	{Api{"key1"}, TestOptions{"世界", "option2"}, "function3", "http://api.zoopla.co.uk/api/v1/function3.js?api_key=key1&parameter1=世界&parameter2=option2"},
-}
-
-func TestRequestURL(t *testing.T) {
-	for _, test := range urlTests {
-		res := test.api.RequestURL(test.function, test.opts)
-		if res != test.result {
-			t.Error("RequestURL: got " + res + " expected " + test.result)
+func TestNewRequest(t *testing.T) {
+	for _, test := range nrTests {
+		res, err := test.api.NewRequest(test.function, "GET", test.opts)
+		if err != nil {
+			t.Error("NewRequest: unexpected error, ", err)
+		}
+		if res.URL.String() != test.result {
+			t.Error("NewRequest: got " + res.URL.String() + " expected " + test.result)
 		}
 	}
 }
@@ -53,8 +52,8 @@ var newApiTests = []NewApiTest{
 func TestNewApi(t *testing.T) {
 	for _, test := range newApiTests {
 		a := NewApi(test.key)
-		if a.key != test.key {
-			t.Error("NewApi: got " + a.key + " expected " + test.key)
+		if a.Key != test.key {
+			t.Error("NewApi: got " + a.Key + " expected " + test.key)
 		}
 	}
 }

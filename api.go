@@ -6,25 +6,45 @@
 package zoopla
 
 import (
-	"io/ioutil"
-	"net/http"
+    "net/http"
+    "net/url"
+
+    "github.com/google/go-querystring/query"
 )
 
-const BaseURL = "http://api.zoopla.co.uk/api/v1/"
-
-type OptionStringer interface {
-	OptionString() string
-}
+const (
+    version        = "0.01"
+    defaultBaseURL = "http://api.zoopla.co.uk/api/v1/"
+    userAgent      = "github.com/JamesHutch/zoopla/" + version
+)
 
 type Api struct {
-	key string
+    BaseURL   *url.URL
+    Key       string
+    UserAgent string
 }
 
 func NewApi(key string) *Api {
-	f := Api{key}
-	return &f
+    baseURL, _ := url.Parse(defaultBaseURL)
+    return &Api{Key: key, UserAgent: userAgent, BaseURL: baseURL}
 }
 
-func (a *Api) RequestURL(function string, opt OptionStringer) string {
-	return BaseURL + function + ".js?api_key=" + a.key + "&" + opt.OptionString()
+func (a *Api) NewRequest(relUrl, method string, opt interface{}) (*http.Request, error) {
+    rel, err := url.Parse(relUrl)
+    if err != nil {
+        return nil, err
+    }
+    u := a.BaseURL.ResolveReference(rel)
+    qs, err := query.Values(opt)
+    if err != nil {
+        return nil, err
+    }
+    qs.Set("api_key", a.Key)
+    u.RawQuery = qs.Encode()
+    req, err := http.NewRequest(method, u.String(), nil)
+    if err != nil {
+        return nil, err
+    }
+    req.Header.Add("User-Agent", a.UserAgent)
+    return req, nil
 }
